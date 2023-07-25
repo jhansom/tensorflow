@@ -1,5 +1,5 @@
 # Values: debian:<version>, ubuntu:<version>
-BASE_IMAGE ?= debian:buster
+BASE_IMAGE ?= ubuntu:22.04
 # Values: python, python3
 PYTHON ?= python3
 # Values: rpi, aarch64, native

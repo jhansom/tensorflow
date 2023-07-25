@@ -149,14 +149,40 @@ def _check_python_bin(repository_ctx, python_bin):
 
 def _get_python_include(repository_ctx, python_bin):
     """Gets the python include path."""
+
+    # Check if the Python version is below 3.10.
+    body = "from __future__ import print_function;"
+    body += "import sys;"
+    body += "print(sys.version_info < (3,10))"
     result = execute(
         repository_ctx,
         [
             python_bin,
             "-c",
-            "from __future__ import print_function;" +
-            "from distutils import sysconfig;" +
-            "print(sysconfig.get_python_inc())",
+            body,
+        ],
+        error_msg = "Problem getting python include path.",
+        error_details = ("Is the Python binary path set up right? " +
+                         "(See ./configure or " + PYTHON_BIN_PATH + ".) " +
+                         "Is distutils installed?"),
+    )
+
+    if 'True' in result.stdout.splitlines()[0]:
+        # Get the Python include path using Python 3.9 and below.
+        body = "from __future__ import print_function;"
+        body += "from distutils import sysconfig;"
+        body += "print(sysconfig.get_python_inc())"
+    else:
+        # Get the Python include path using Python 3.10 and above.
+        body = "import sysconfig;"
+        body += "print(sysconfig.get_path(\"include\"))"
+
+    result = execute(
+        repository_ctx,
+        [
+            python_bin,
+            "-c",
+            body,
         ],
         error_msg = "Problem getting python include path.",
         error_details = ("Is the Python binary path set up right? " +
